@@ -1,0 +1,712 @@
+<title>Command Center</title>
+<style>
+  /*
+    Single committed visual world (deliberate, per visual-design-system-foundation.md):
+    a fixed premium clinical palette (charcoal / olive / champagne / clay / ivory),
+    not a light/dark toggle. Background and every color below are painted explicitly.
+  */
+  :root {
+    --color-charcoal: #1E1E1E;
+    --color-olive: #39432F;
+    --color-olive-strong: #2C331F;
+    --color-champagne: #D8C6B0;
+    --color-clay: #76564D;
+    --color-ivory: #E8DDCE;
+
+    --bg-canvas: #FAF7F2;
+    --bg-surface: #FFFFFF;
+    --bg-muted: #E8DDCE;
+    --bg-inverse: #1E1E1E;
+
+    --border-subtle: #E4DCD1;
+    --border-strong: #C9BBA8;
+
+    --text-primary: #1E1E1E;
+    --text-secondary: #5B5650;
+    --text-muted: #8A8378;
+    --text-inverse: #F5F1EA;
+    --text-link: #39432F;
+
+    --status-stable: #39432F;
+    --status-attention: #B8863B;
+    --status-urgent: #9C3B2E;
+
+    --ai-accent: #76564D;
+    --ai-accent-muted: #9C8175;
+    --ai-surface: rgba(118, 86, 77, 0.07);
+
+    --font-display: 'Peyda', 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+    --font-body: 'Roboto', 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
+
+    --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px; --radius-pill: 999px;
+
+    --shadow-1: 0 1px 2px rgba(30,30,30,0.05);
+    --shadow-2: 0 8px 28px rgba(30,30,30,0.14);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-canvas);
+  }
+
+  body {
+    overflow-x: auto;
+    font: 400 15px/1.6 var(--font-body);
+    color: var(--text-primary);
+  }
+
+  h1, h2, h3, p, ul { margin: 0; padding: 0; list-style: none; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  a { color: inherit; }
+
+  [dir="ltr"] { unicode-bidi: isolate; }
+
+  :focus-visible {
+    outline: 2px solid var(--color-olive);
+    outline-offset: 2px;
+  }
+
+  .app {
+    display: flex;
+    min-width: 1240px;
+    min-height: 100vh;
+  }
+
+  /* ---------- Navigation rail ---------- */
+
+  .nav-rail {
+    flex: 0 0 88px;
+    background: var(--bg-inverse);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-6) 0;
+  }
+
+  .nav-mark {
+    width: 32px; height: 32px;
+    border: 1.5px solid var(--color-champagne);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-8);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-champagne);
+    font: 800 14px var(--font-display);
+  }
+
+  .nav-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    flex: 1;
+  }
+
+  .nav-item {
+    background: none; border: none;
+    width: 44px; height: 44px;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    color: #8A8580;
+    position: relative;
+    transition: color .15s ease;
+  }
+
+  .nav-item svg { width: 20px; height: 20px; }
+
+  .nav-item:hover { color: var(--text-inverse); }
+
+  .nav-item[aria-current="page"] { color: var(--text-inverse); }
+
+  .nav-item[aria-current="page"]::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    width: 4px; height: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--color-champagne);
+  }
+
+  .nav-avatar {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-pill);
+    background: #2B2B2B;
+    color: var(--text-inverse);
+    display: flex; align-items: center; justify-content: center;
+    font: 500 12px var(--font-body);
+    border: 1px solid #3A3A3A;
+  }
+
+  /* ---------- Workspace shell ---------- */
+
+  .workspace-shell {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .workspace {
+    flex: 1;
+    padding: var(--space-12) var(--space-16) var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    transition: filter .2s ease, opacity .2s ease;
+  }
+
+  .workspace-shell.ai-open .workspace {
+    filter: saturate(.85);
+    opacity: .55;
+    pointer-events: none;
+  }
+
+  /* ---------- A. Orientation strip ---------- */
+
+  .orientation {
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: .01em;
+  }
+
+  /* ---------- B. Now ---------- */
+
+  .now {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-8);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+  }
+
+  .now-info { min-width: 0; }
+
+  .now-top {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+
+  .pill {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 12px;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+  }
+
+  .pill-stable {
+    background: rgba(57, 67, 47, 0.09);
+    color: var(--status-stable);
+  }
+
+  .now-name {
+    font: 800 32px/1.2 var(--font-display);
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+
+  .now-context {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-2);
+  }
+
+  .now-ai-tag {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 13px;
+    color: var(--ai-accent);
+  }
+
+  .ai-mark { color: var(--ai-accent-muted); font-size: 12px; }
+
+  .btn-primary {
+    flex-shrink: 0;
+    background: var(--color-olive);
+    color: var(--text-inverse);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 14px 28px;
+    font-size: 15px;
+    font-weight: 500;
+    transition: background .15s ease;
+  }
+
+  .btn-primary:hover { background: var(--color-olive-strong); }
+
+  /* ---------- C / D row ---------- */
+
+  .priority-row {
+    display: flex;
+    gap: var(--space-8);
+    align-items: flex-start;
+  }
+
+  .next-col { flex: 1 1 62%; min-width: 0; }
+  .notable-col { flex: 1 1 34%; min-width: 0; }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: var(--space-2);
+  }
+
+  .section-title {
+    font: 800 20px/1.3 var(--font-display);
+    letter-spacing: -0.005em;
+  }
+
+  .link-quiet {
+    font-size: 13px;
+    color: var(--text-link);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color .15s ease;
+  }
+
+  .link-quiet:hover { border-color: var(--text-link); }
+
+  .row-list li {
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .row-list li:last-child { border-bottom: none; }
+
+  /* Next rows */
+
+  .next-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: 15px 6px;
+    border-radius: var(--radius-sm);
+    transition: background .15s ease;
+  }
+
+  .next-row:hover { background: var(--bg-muted); }
+
+  .row-main {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  .row-name { font-size: 16px; font-weight: 500; color: var(--text-primary); }
+  .row-time { font-size: 13px; color: var(--text-muted); }
+
+  .ai-tag-inline {
+    font-size: 13px;
+    color: var(--ai-accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .more-line {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: var(--space-3) 6px 0;
+  }
+
+  /* Notable rows */
+
+  .notable-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: 14px 6px;
+    border-radius: var(--radius-sm);
+    transition: background .15s ease;
+  }
+
+  .notable-row:hover { background: var(--bg-muted); }
+
+  .status-dot {
+    width: 9px; height: 9px;
+    border-radius: var(--radius-pill);
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+
+  .status-dot.urgent { background: var(--status-urgent); }
+  .status-dot.attention { background: var(--status-attention); }
+
+  .notable-body { flex: 1; min-width: 0; }
+
+  .notable-verdict { font-size: 15px; color: var(--text-primary); }
+  .notable-patient { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  .dismiss {
+    background: none;
+    border: none;
+    font-size: 13px;
+    color: var(--text-muted);
+    opacity: 0;
+    flex-shrink: 0;
+    transition: opacity .15s ease;
+  }
+
+  .notable-row:hover .dismiss,
+  .dismiss:focus-visible { opacity: 1; }
+
+  /* ---------- E. AI presence line ---------- */
+
+  .ai-line {
+    flex-shrink: 0;
+    border-top: 1px solid var(--border-subtle);
+    padding: var(--space-3) var(--space-16);
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .ai-line-cluster {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .ai-status-text {
+    font-size: 13px;
+    color: var(--ai-accent-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .ai-ask {
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ai-accent);
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    transition: background .15s ease;
+  }
+
+  .ai-ask:hover { background: var(--ai-surface); }
+
+  /* ---------- AI overlay ---------- */
+
+  .ai-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+  }
+
+  .ai-overlay[hidden] { display: none; }
+
+  .ai-backdrop {
+    flex: 1;
+    background: transparent;
+    border: none;
+    cursor: default;
+  }
+
+  .ai-panel {
+    width: 380px;
+    flex-shrink: 0;
+    background: var(--bg-surface);
+    border-inline-start: 2px solid var(--ai-accent);
+    box-shadow: var(--shadow-2);
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-6);
+  }
+
+  .ai-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-6);
+  }
+
+  .ai-panel-title {
+    font: 800 20px/1.3 var(--font-display);
+    color: var(--text-primary);
+  }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    width: 28px; height: 28px;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    transition: background .15s ease;
+  }
+
+  .icon-btn:hover { background: var(--bg-muted); }
+
+  .ai-hint {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-4);
+  }
+
+  .ai-suggestions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: auto;
+  }
+
+  .ai-suggestion {
+    text-align: start;
+    background: var(--ai-surface);
+    border: 1px solid transparent;
+    color: var(--ai-accent);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    transition: border-color .15s ease;
+  }
+
+  .ai-suggestion:hover { border-color: var(--ai-accent-muted); }
+
+  .ai-panel-input {
+    margin-top: var(--space-6);
+    border-top: 1px solid var(--border-subtle);
+    padding-top: var(--space-4);
+  }
+
+  .ai-panel-input input {
+    width: 100%;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    font: 400 14px var(--font-body);
+    background: var(--bg-canvas);
+  }
+
+  .ai-panel-input input::placeholder { color: var(--text-muted); }
+
+  .ai-panel-input input:focus-visible { border-color: var(--color-olive); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<div class="app" dir="rtl" lang="fa">
+  <nav class="nav-rail" aria-label="پیمایش اصلی">
+    <div class="nav-mark" aria-hidden="true">DR</div>
+    <div class="nav-items">
+      <button class="nav-item" aria-current="page" title="خانه">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 12 12 5 20 12" />
+          <path d="M6.5 10.5V19H17.5V10.5" />
+        </svg>
+      </button>
+      <button class="nav-item" title="پرونده بیماران">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8.5" r="3.5" />
+          <path d="M5 19c0-4 3-6.5 7-6.5S19 15 19 19" />
+        </svg>
+      </button>
+      <button class="nav-item" title="اتاق ویزیت">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="7.5" />
+          <path d="M12 8v4l3 2" />
+        </svg>
+      </button>
+      <button class="nav-item" title="برنامه درمان">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 6h13" />
+          <path d="M5 12h16" />
+          <path d="M5 18h9" />
+        </svg>
+      </button>
+    </div>
+    <div class="nav-avatar" title="دکتر سارا مرادی">س.م</div>
+  </nav>
+
+  <div class="workspace-shell" id="workspace-shell">
+    <div class="workspace">
+
+      <p class="orientation">
+        یکشنبه &nbsp;·&nbsp; <span dir="ltr">8</span> بیمار امروز &nbsp;·&nbsp; شروع کلینیک تا <span dir="ltr">12</span> دقیقه دیگر
+      </p>
+
+      <section class="now" aria-label="اکنون">
+        <div class="now-info">
+          <div class="now-top">
+            <span class="pill pill-stable">پایدار</span>
+            <h2 class="now-name">علی محمدی</h2>
+          </div>
+          <p class="now-context">
+            پیگیری فشار خون &nbsp;·&nbsp; <span dir="ltr">9:30</span> — در <span dir="ltr">10</span> دقیقه دیگر
+          </p>
+          <p class="now-ai-tag">
+            <span class="ai-mark" aria-hidden="true">✦</span>
+            روند صعودی HbA1c از آخرین ویزیت
+          </p>
+        </div>
+        <button class="btn-primary">شروع ویزیت</button>
+      </section>
+
+      <div class="priority-row">
+        <section class="next-col" aria-label="بعدی">
+          <div class="section-head">
+            <h3 class="section-title">بعدی</h3>
+            <a class="link-quiet" href="#">مشاهده برنامه کامل</a>
+          </div>
+          <ul class="row-list">
+            <li>
+              <div class="next-row">
+                <div class="row-main">
+                  <span class="row-name">سارا احمدی</span>
+                  <span class="row-time" dir="ltr">10:00</span>
+                </div>
+                <span class="ai-tag-inline"><span class="ai-mark" aria-hidden="true">✦</span>بازنگری دوز جدید دارو</span>
+              </div>
+            </li>
+            <li>
+              <div class="next-row">
+                <div class="row-main">
+                  <span class="row-name">رضا کریمی</span>
+                  <span class="row-time" dir="ltr">10:30</span>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="next-row">
+                <div class="row-main">
+                  <span class="row-name">مریم رضایی</span>
+                  <span class="row-time" dir="ltr">11:00</span>
+                </div>
+                <span class="ai-tag-inline"><span class="ai-mark" aria-hidden="true">✦</span>پیگیری آزمایش تیروئید</span>
+              </div>
+            </li>
+            <li>
+              <div class="next-row">
+                <div class="row-main">
+                  <span class="row-name">نیما توکلی</span>
+                  <span class="row-time" dir="ltr">11:30</span>
+                </div>
+              </div>
+            </li>
+          </ul>
+          <p class="more-line">+ <span dir="ltr">4</span> مورد دیگر امروز</p>
+        </section>
+
+        <aside class="notable-col" aria-label="قابل توجه">
+          <div class="section-head">
+            <h3 class="section-title">قابل توجه</h3>
+          </div>
+          <ul class="row-list">
+            <li>
+              <div class="notable-row">
+                <span class="status-dot urgent" aria-hidden="true"></span>
+                <div class="notable-body">
+                  <p class="notable-verdict">علائم هشدار جدید گزارش شده</p>
+                  <p class="notable-patient">بیمار: نگار حسینی</p>
+                </div>
+                <button class="dismiss">رد کردن</button>
+              </div>
+            </li>
+            <li>
+              <div class="notable-row">
+                <span class="status-dot attention" aria-hidden="true"></span>
+                <div class="notable-body">
+                  <p class="notable-verdict">نتیجه آزمایش دریافت شد</p>
+                  <p class="notable-patient">بیمار: کاوه یزدانی</p>
+                </div>
+                <button class="dismiss">رد کردن</button>
+              </div>
+            </li>
+            <li>
+              <div class="notable-row">
+                <span class="status-dot attention" aria-hidden="true"></span>
+                <div class="notable-body">
+                  <p class="notable-verdict">پیگیری قرار ملاقات عقب‌افتاده</p>
+                  <p class="notable-patient">بیمار: پویا اکبری</p>
+                </div>
+                <button class="dismiss">رد کردن</button>
+              </div>
+            </li>
+          </ul>
+          <p class="more-line">+ <span dir="ltr">2</span> مورد دیگر</p>
+        </aside>
+      </div>
+    </div>
+
+    <footer class="ai-line">
+      <div class="ai-line-cluster">
+        <p class="ai-status-text">
+          <span class="ai-mark" aria-hidden="true">✦</span>
+          آماده‌سازی یادداشت برای <span dir="ltr">3</span> ویزیت امروز
+        </p>
+        <button class="ai-ask" id="ai-toggle">
+          <span aria-hidden="true">✦</span> بپرس
+        </button>
+      </div>
+    </footer>
+
+    <div class="ai-overlay" id="ai-overlay" hidden>
+      <button class="ai-backdrop" id="ai-backdrop" aria-label="بستن دستیار"></button>
+      <div class="ai-panel" role="dialog" aria-label="دستیار هوشمند">
+        <div class="ai-panel-head">
+          <h3 class="ai-panel-title">دستیار هوشمند</h3>
+          <button class="icon-btn" id="ai-close" aria-label="بستن">×</button>
+        </div>
+        <p class="ai-hint">از دستیار درباره امروز بپرسید</p>
+        <div class="ai-suggestions">
+          <button class="ai-suggestion">خلاصه امروز را نشان بده</button>
+          <button class="ai-suggestion">کدام بیمار بیشترین اولویت را دارد؟</button>
+        </div>
+        <div class="ai-panel-input">
+          <input type="text" placeholder="چه چیزی می‌خواهید بپرسید؟" />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var shell = document.getElementById('workspace-shell');
+    var overlay = document.getElementById('ai-overlay');
+    var toggle = document.getElementById('ai-toggle');
+    var close = document.getElementById('ai-close');
+    var backdrop = document.getElementById('ai-backdrop');
+
+    function open() {
+      overlay.hidden = false;
+      shell.classList.add('ai-open');
+      close.focus();
+    }
+    function shut() {
+      overlay.hidden = true;
+      shell.classList.remove('ai-open');
+      toggle.focus();
+    }
+
+    toggle.addEventListener('click', open);
+    close.addEventListener('click', shut);
+    backdrop.addEventListener('click', shut);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !overlay.hidden) shut();
+    });
+  })();
+</script>
