@@ -35,6 +35,8 @@
     --ai-accent-muted: #9C8175;
     --ai-surface: rgba(118, 86, 77, 0.07);
 
+    --specialty-accent: #A9714B;
+
     --font-display: 'Peyda', 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
     --font-body: 'Roboto', 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
 
@@ -151,9 +153,16 @@
     min-width: 0;
   }
 
+  .specialty-bar {
+    height: 2px;
+    flex-shrink: 0;
+    background: var(--specialty-accent);
+    transition: background .2s ease;
+  }
+
   .workspace {
     flex: 1;
-    padding: var(--space-12) var(--space-16) var(--space-8);
+    padding: var(--space-8) var(--space-16) var(--space-8);
     display: flex;
     flex-direction: column;
     gap: var(--space-8);
@@ -166,12 +175,62 @@
     pointer-events: none;
   }
 
-  /* ---------- A. Orientation strip ---------- */
+  /* ---------- A. Status + AI Morning Brief ---------- */
 
-  .orientation {
+  .top-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .status-line {
     font-size: 13px;
     color: var(--text-muted);
-    letter-spacing: .01em;
+  }
+
+  .brief-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+    flex-wrap: wrap;
+  }
+
+  .morning-brief {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    max-width: 62ch;
+  }
+
+  .ai-mark { color: var(--ai-accent-muted); font-size: 12px; flex-shrink: 0; }
+
+  .specialty-switch {
+    display: flex;
+    gap: 2px;
+    background: var(--bg-muted);
+    padding: 3px;
+    border-radius: var(--radius-pill);
+    flex-shrink: 0;
+  }
+
+  .sw-btn {
+    background: none;
+    border: none;
+    padding: 6px 16px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+  }
+
+  .sw-btn[aria-pressed="true"] {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-1);
   }
 
   /* ---------- B. Now ---------- */
@@ -182,12 +241,12 @@
     border-radius: var(--radius-md);
     padding: var(--space-8);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: var(--space-6);
   }
 
-  .now-info { min-width: 0; }
+  .now-info { min-width: 0; flex: 1; }
 
   .now-top {
     display: flex;
@@ -219,21 +278,49 @@
     font-size: 16px;
     font-weight: 500;
     color: var(--text-secondary);
-    margin-bottom: var(--space-2);
   }
 
-  .now-ai-tag {
+  .clinical-brief {
+    margin-top: var(--space-4);
+    background: var(--ai-surface);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    max-width: 46ch;
+  }
+
+  .clinical-brief-label {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
-    font-size: 13px;
-    color: var(--ai-accent);
+    gap: 6px;
+    font-size: 12px;
+    color: var(--ai-accent-muted);
+    margin-bottom: 6px;
   }
 
-  .ai-mark { color: var(--ai-accent-muted); font-size: 12px; }
+  .clinical-brief ul {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .clinical-brief li {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    position: relative;
+    padding-inline-start: 14px;
+  }
+
+  .clinical-brief li::before {
+    content: "\2013";
+    position: absolute;
+    inset-inline-start: 0;
+    color: var(--ai-accent-muted);
+  }
 
   .btn-primary {
     flex-shrink: 0;
+    margin-top: 2px;
     background: var(--color-olive);
     color: var(--text-inverse);
     border: none;
@@ -438,7 +525,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-4);
   }
 
   .ai-panel-title {
@@ -458,9 +545,13 @@
 
   .icon-btn:hover { background: var(--bg-muted); }
 
-  .ai-hint {
+  .ai-panel-brief {
     font-size: 14px;
+    line-height: 1.6;
     color: var(--text-secondary);
+    background: var(--ai-surface);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
     margin-bottom: var(--space-4);
   }
 
@@ -503,6 +594,14 @@
 
   .ai-panel-input input:focus-visible { border-color: var(--color-olive); }
 
+  /* ---------- Specialty content switching ---------- */
+
+  .workspace-shell[data-specialty="ortho"] { --specialty-accent: #A9714B; }
+  .workspace-shell[data-specialty="psych"] { --specialty-accent: #8C6E7A; }
+
+  .workspace-shell[data-specialty="ortho"] .sp-psych { display: none; }
+  .workspace-shell[data-specialty="psych"] .sp-ortho { display: none; }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
   }
@@ -541,26 +640,68 @@
     <div class="nav-avatar" title="دکتر سارا مرادی">س.م</div>
   </nav>
 
-  <div class="workspace-shell" id="workspace-shell">
+  <div class="workspace-shell" id="workspace-shell" data-specialty="ortho">
+    <div class="specialty-bar" aria-hidden="true"></div>
+
     <div class="workspace">
 
-      <p class="orientation">
-        یکشنبه &nbsp;·&nbsp; <span dir="ltr">8</span> بیمار امروز &nbsp;·&nbsp; شروع کلینیک تا <span dir="ltr">12</span> دقیقه دیگر
-      </p>
+      <div class="top-block">
+        <p class="status-line">یکشنبه &nbsp;·&nbsp; شروع کلینیک تا <span dir="ltr">12</span> دقیقه دیگر</p>
 
-      <section class="now" aria-label="اکنون">
+        <div class="brief-row">
+          <p class="morning-brief">
+            <span class="ai-mark" aria-hidden="true">✦</span>
+            <span class="sp-ortho">امروز صبح <span dir="ltr">8</span> پرونده بررسی شد؛ <span dir="ltr">2</span> بیمار نیاز به توجه بیشتر دارند، <span dir="ltr">1</span> گزارش تصویربرداری تازه دریافت شده</span>
+            <span class="sp-psych">امروز صبح <span dir="ltr">6</span> پرونده بررسی شد؛ <span dir="ltr">2</span> بیمار نیاز به توجه بیشتر دارند، <span dir="ltr">1</span> ارزیابی تکمیل‌نشده باقی مانده</span>
+          </p>
+
+          <div class="specialty-switch" role="group" aria-label="زمینه تخصصی">
+            <button class="sw-btn" data-sp="ortho" aria-pressed="true">ارتوپدی</button>
+            <button class="sw-btn" data-sp="psych" aria-pressed="false">روان‌پزشکی</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Now: Orthopedics -->
+      <section class="now sp-ortho" aria-label="اکنون">
         <div class="now-info">
           <div class="now-top">
             <span class="pill pill-stable">پایدار</span>
             <h2 class="now-name">علی محمدی</h2>
           </div>
           <p class="now-context">
-            پیگیری فشار خون &nbsp;·&nbsp; <span dir="ltr">9:30</span> — در <span dir="ltr">10</span> دقیقه دیگر
+            پیگیری بعد از عمل زانو · روز <span dir="ltr">3</span> &nbsp;·&nbsp; <span dir="ltr">9:30</span> — در <span dir="ltr">10</span> دقیقه دیگر
           </p>
-          <p class="now-ai-tag">
-            <span class="ai-mark" aria-hidden="true">✦</span>
-            روند صعودی HbA1c از آخرین ویزیت
+          <div class="clinical-brief">
+            <p class="clinical-brief-label"><span class="ai-mark" aria-hidden="true">✦</span> خلاصه بالینی</p>
+            <ul>
+              <li>کاهش <span dir="ltr">15</span> درجه‌ای دامنه حرکتی (ROM) نسبت به ویزیت قبل</li>
+              <li>گزارش درد هنگام پله‌روی در یادداشت پرستار</li>
+              <li>تصویربرداری پیگیری آماده بررسی است</li>
+            </ul>
+          </div>
+        </div>
+        <button class="btn-primary">شروع ویزیت</button>
+      </section>
+
+      <!-- Now: Psychiatry -->
+      <section class="now sp-psych" aria-label="اکنون">
+        <div class="now-info">
+          <div class="now-top">
+            <span class="pill pill-stable">پایدار</span>
+            <h2 class="now-name">نگار حسینی</h2>
+          </div>
+          <p class="now-context">
+            جلسه پیگیری خلق و خو · هفته ششم &nbsp;·&nbsp; <span dir="ltr">9:30</span> — در <span dir="ltr">10</span> دقیقه دیگر
           </p>
+          <div class="clinical-brief">
+            <p class="clinical-brief-label"><span class="ai-mark" aria-hidden="true">✦</span> خلاصه بالینی</p>
+            <ul>
+              <li>نمره PHQ-9 نسبت به جلسه قبل <span dir="ltr">4</span> واحد افزایش داشته</li>
+              <li>الگوی خواب نامنظم در یادداشت‌های اخیر ثبت شده</li>
+              <li>ارزیابی GAD-7 هفته گذشته تکمیل نشده است</li>
+            </ul>
+          </div>
         </div>
         <button class="btn-primary">شروع ویزیت</button>
       </section>
@@ -571,14 +712,15 @@
             <h3 class="section-title">بعدی</h3>
             <a class="link-quiet" href="#">مشاهده برنامه کامل</a>
           </div>
-          <ul class="row-list">
+
+          <ul class="row-list sp-ortho">
             <li>
               <div class="next-row">
                 <div class="row-main">
                   <span class="row-name">سارا احمدی</span>
                   <span class="row-time" dir="ltr">10:00</span>
                 </div>
-                <span class="ai-tag-inline"><span class="ai-mark" aria-hidden="true">✦</span>بازنگری دوز جدید دارو</span>
+                <span class="ai-tag-inline"><span class="ai-mark" aria-hidden="true">✦</span>کاهش ROM نسبت به ویزیت قبل</span>
               </div>
             </li>
             <li>
@@ -595,7 +737,7 @@
                   <span class="row-name">مریم رضایی</span>
                   <span class="row-time" dir="ltr">11:00</span>
                 </div>
-                <span class="ai-tag-inline"><span class="ai-mark" aria-hidden="true">✦</span>پیگیری آزمایش تیروئید</span>
+                <span class="ai-tag-inline"><span class="ai-mark" aria-hidden="true">✦</span>پیگیری فیزیوتراپی انجام نشده</span>
               </div>
             </li>
             <li>
@@ -607,29 +749,58 @@
               </div>
             </li>
           </ul>
-          <p class="more-line">+ <span dir="ltr">4</span> مورد دیگر امروز</p>
+          <p class="more-line sp-ortho">+ <span dir="ltr">4</span> مورد دیگر امروز</p>
+
+          <ul class="row-list sp-psych">
+            <li>
+              <div class="next-row">
+                <div class="row-main">
+                  <span class="row-name">آرش صفوی</span>
+                  <span class="row-time" dir="ltr">10:00</span>
+                </div>
+                <span class="ai-tag-inline"><span class="ai-mark" aria-hidden="true">✦</span>عدم تکمیل GAD-7 هفته گذشته</span>
+              </div>
+            </li>
+            <li>
+              <div class="next-row">
+                <div class="row-main">
+                  <span class="row-name">لیلا شریفی</span>
+                  <span class="row-time" dir="ltr">10:30</span>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="next-row">
+                <div class="row-main">
+                  <span class="row-name">بهرام نادری</span>
+                  <span class="row-time" dir="ltr">11:00</span>
+                </div>
+                <span class="ai-tag-inline"><span class="ai-mark" aria-hidden="true">✦</span>بازنگری دوز SSRI نیاز است</span>
+              </div>
+            </li>
+            <li>
+              <div class="next-row">
+                <div class="row-main">
+                  <span class="row-name">شیوا کاظمی</span>
+                  <span class="row-time" dir="ltr">11:30</span>
+                </div>
+              </div>
+            </li>
+          </ul>
+          <p class="more-line sp-psych">+ <span dir="ltr">2</span> مورد دیگر امروز</p>
         </section>
 
         <aside class="notable-col" aria-label="قابل توجه">
           <div class="section-head">
             <h3 class="section-title">قابل توجه</h3>
           </div>
-          <ul class="row-list">
+
+          <ul class="row-list sp-ortho">
             <li>
               <div class="notable-row">
                 <span class="status-dot urgent" aria-hidden="true"></span>
                 <div class="notable-body">
-                  <p class="notable-verdict">علائم هشدار جدید گزارش شده</p>
-                  <p class="notable-patient">بیمار: نگار حسینی</p>
-                </div>
-                <button class="dismiss">رد کردن</button>
-              </div>
-            </li>
-            <li>
-              <div class="notable-row">
-                <span class="status-dot attention" aria-hidden="true"></span>
-                <div class="notable-body">
-                  <p class="notable-verdict">نتیجه آزمایش دریافت شد</p>
+                  <p class="notable-verdict">افزایش درد گزارش‌شده بعد از عمل</p>
                   <p class="notable-patient">بیمار: کاوه یزدانی</p>
                 </div>
                 <button class="dismiss">رد کردن</button>
@@ -639,14 +810,48 @@
               <div class="notable-row">
                 <span class="status-dot attention" aria-hidden="true"></span>
                 <div class="notable-body">
-                  <p class="notable-verdict">پیگیری قرار ملاقات عقب‌افتاده</p>
+                  <p class="notable-verdict">نتیجه تصویربرداری آماده بررسی است</p>
                   <p class="notable-patient">بیمار: پویا اکبری</p>
                 </div>
                 <button class="dismiss">رد کردن</button>
               </div>
             </li>
+            <li>
+              <div class="notable-row">
+                <span class="status-dot attention" aria-hidden="true"></span>
+                <div class="notable-body">
+                  <p class="notable-verdict">جلسه فیزیوتراپی این هفته ثبت نشده</p>
+                  <p class="notable-patient">بیمار: بهنام رادفر</p>
+                </div>
+                <button class="dismiss">رد کردن</button>
+              </div>
+            </li>
           </ul>
-          <p class="more-line">+ <span dir="ltr">2</span> مورد دیگر</p>
+          <p class="more-line sp-ortho">+ <span dir="ltr">2</span> مورد دیگر</p>
+
+          <ul class="row-list sp-psych">
+            <li>
+              <div class="notable-row">
+                <span class="status-dot urgent" aria-hidden="true"></span>
+                <div class="notable-body">
+                  <p class="notable-verdict">تغییر ناگهانی خلق گزارش شده</p>
+                  <p class="notable-patient">بیمار: مهسا قاسمی</p>
+                </div>
+                <button class="dismiss">رد کردن</button>
+              </div>
+            </li>
+            <li>
+              <div class="notable-row">
+                <span class="status-dot attention" aria-hidden="true"></span>
+                <div class="notable-body">
+                  <p class="notable-verdict">بازبینی معاینه وضعیت روانی (MSE) عقب‌افتاده</p>
+                  <p class="notable-patient">بیمار: امیر دهقان</p>
+                </div>
+                <button class="dismiss">رد کردن</button>
+              </div>
+            </li>
+          </ul>
+          <p class="more-line sp-psych">+ <span dir="ltr">1</span> مورد دیگر</p>
         </aside>
       </div>
     </div>
@@ -655,7 +860,8 @@
       <div class="ai-line-cluster">
         <p class="ai-status-text">
           <span class="ai-mark" aria-hidden="true">✦</span>
-          آماده‌سازی یادداشت برای <span dir="ltr">3</span> ویزیت امروز
+          <span class="sp-ortho">یادداشت برای <span dir="ltr">3</span> ویزیت آماده شد</span>
+          <span class="sp-psych">یادداشت برای <span dir="ltr">2</span> جلسه آماده شد</span>
         </p>
         <button class="ai-ask" id="ai-toggle">
           <span aria-hidden="true">✦</span> بپرس
@@ -670,7 +876,14 @@
           <h3 class="ai-panel-title">دستیار هوشمند</h3>
           <button class="icon-btn" id="ai-close" aria-label="بستن">×</button>
         </div>
-        <p class="ai-hint">از دستیار درباره امروز بپرسید</p>
+
+        <p class="ai-panel-brief sp-ortho">
+          بر اساس بررسی صبحگاهی: تصویربرداری کاوه یزدانی آماده بررسی است و کاهش دامنه حرکتی علی محمدی نیاز به پیگیری دارد.
+        </p>
+        <p class="ai-panel-brief sp-psych">
+          بر اساس بررسی صبحگاهی: نمره PHQ-9 نگار حسینی افزایش داشته و ارزیابی GAD-7 دو بیمار دیگر تکمیل نشده است.
+        </p>
+
         <div class="ai-suggestions">
           <button class="ai-suggestion">خلاصه امروز را نشان بده</button>
           <button class="ai-suggestion">کدام بیمار بیشترین اولویت را دارد؟</button>
@@ -690,23 +903,34 @@
     var toggle = document.getElementById('ai-toggle');
     var close = document.getElementById('ai-close');
     var backdrop = document.getElementById('ai-backdrop');
+    var swButtons = document.querySelectorAll('.sw-btn');
 
-    function open() {
+    function openAi() {
       overlay.hidden = false;
       shell.classList.add('ai-open');
       close.focus();
     }
-    function shut() {
+    function shutAi() {
       overlay.hidden = true;
       shell.classList.remove('ai-open');
       toggle.focus();
     }
 
-    toggle.addEventListener('click', open);
-    close.addEventListener('click', shut);
-    backdrop.addEventListener('click', shut);
+    toggle.addEventListener('click', openAi);
+    close.addEventListener('click', shutAi);
+    backdrop.addEventListener('click', shutAi);
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && !overlay.hidden) shut();
+      if (e.key === 'Escape' && !overlay.hidden) shutAi();
+    });
+
+    swButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var sp = btn.getAttribute('data-sp');
+        shell.setAttribute('data-specialty', sp);
+        swButtons.forEach(function (b) {
+          b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+        });
+      });
     });
   })();
 </script>
